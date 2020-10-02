@@ -14,9 +14,9 @@ resource "aws_s3_bucket" "lambda_bucket" {
 resource "aws_s3_bucket_object" "lambda_zip" {
   bucket = aws_s3_bucket.lambda_bucket.bucket
   key    = local.lambda_zip
-  source = "../build/${local.lambda_zip}"
+  source = local.lambda_zip
 
-  etag = filemd5("../build/${local.lambda_zip}")
+  etag = filemd5(local.lambda_zip)
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -51,7 +51,7 @@ resource "aws_lambda_function" "lambda_add" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "memberships-lambda"
 
-  source_code_hash = filebase64sha256("../build/${local.lambda_zip}")
+  source_code_hash = filebase64sha256(local.lambda_zip)
 
   runtime = "go1.x"
 
@@ -73,7 +73,7 @@ resource "aws_lambda_function" "lambda_list_members_for_level" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "memberships-lambda"
 
-  source_code_hash = filebase64sha256("../build/${local.lambda_zip}")
+  source_code_hash = filebase64sha256(local.lambda_zip)
 
   runtime = "go1.x"
 

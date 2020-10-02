@@ -3,3 +3,4 @@ build
 *.tfstate
 *.backup
 terraform.tfvars
+infra/*.zip

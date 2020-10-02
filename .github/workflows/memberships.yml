@@ -10,13 +10,33 @@ jobs:
       - uses: actions/setup-go@v1
         with:
           go-version: '1.15'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
       - run: make package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lambda
+          path: ./infra/memberships_lambda.zip
   deploy:
     runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: ./infra
     steps:
       - uses: actions/checkout@master
+      - uses: actions/download-artifact@v2
+        with:
+          name: lambda
+          path: ./infra
+      - run: ls -lh
       - uses: hashicorp/setup-terraform@v1
-      
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
+        with:
+          terraform_version: 0.12.29
+          cli_config_credentials_hostname: ${{ secrets.SCALR_HOSTNAME }}
+          cli_config_credentials_token: ${{ secrets.SCALR_TOKEN }}
+      - run: terraform fmt -check
+      - run: terraform init -backend-config="hostname=${{ secrets.SCALR_HOSTNAME }}" -backend-config="organization=${{ secrets.SCALR_ORGANIZATION }}"
+      - run: terraform apply
