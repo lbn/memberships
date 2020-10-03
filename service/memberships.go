@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -18,47 +17,6 @@ const (
 
 type MembershipService struct {
 	client *dynamodb.DynamoDB
-}
-
-func (svc *MembershipService) createTableIfNotExists() error {
-	input := &dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{
-				AttributeName: aws.String("Level"),
-				AttributeType: aws.String("S"),
-			},
-			{
-				AttributeName: aws.String("Name"),
-				AttributeType: aws.String("S"),
-			},
-		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{
-				AttributeName: aws.String("Level"),
-				KeyType:       aws.String("HASH"),
-			},
-			{
-				AttributeName: aws.String("Name"),
-				KeyType:       aws.String("RANGE"),
-			},
-		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(10),
-			WriteCapacityUnits: aws.Int64(10),
-		},
-		TableName: aws.String(tableName),
-	}
-
-	_, err := svc.client.CreateTable(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceInUseException {
-			return nil
-		}
-		return err
-	}
-	return svc.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
-		TableName: aws.String(tableName),
-	})
 }
 
 type Membership struct {
@@ -128,9 +86,5 @@ func NewMembershipService() (svc MembershipService) {
 	}))
 	endpointURL := os.Getenv("AWS_ENDPOINT_URL")
 	svc.client = dynamodb.New(sess, &aws.Config{Endpoint: &endpointURL})
-	// err := svc.createTableIfNotExists()
-	// if err != nil {
-	// 	log.Fatalf("Could not prepare table: %v", err)
-	// }
 	return
 }
