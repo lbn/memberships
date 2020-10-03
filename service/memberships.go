@@ -68,18 +68,6 @@ func (svc *MembershipService) ListMembersForLevel(level string) ([]Membership, e
 	return memberships, err
 }
 
-func (svc *MembershipService) listMembers() ([]Membership, error) {
-	res, err := svc.client.Scan(&dynamodb.ScanInput{
-		TableName: aws.String(tableName),
-	})
-	if err != nil {
-		return nil, err
-	}
-	memberships := []Membership{}
-	err = dynamodbattribute.UnmarshalListOfMaps(res.Items, &memberships)
-	return memberships, err
-}
-
 func NewMembershipService() (svc MembershipService) {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
