@@ -66,6 +66,30 @@ resource "aws_lambda_function" "lambda_add" {
   }
 }
 
+
+resource "aws_lambda_function" "lambda_get" {
+  s3_bucket     = aws_s3_bucket.lambda_bucket.bucket
+  s3_key        = local.lambda_zip
+  function_name = "memberships_get"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "memberships-lambda"
+
+  source_code_hash = filebase64sha256(local.lambda_zip)
+
+  runtime = "go1.x"
+
+  depends_on = [
+    aws_s3_bucket_object.lambda_zip
+  ]
+
+  environment {
+    variables = {
+      function = "get"
+    }
+  }
+}
+
+
 resource "aws_lambda_function" "lambda_list_members_for_level" {
   s3_bucket     = aws_s3_bucket.lambda_bucket.bucket
   s3_key        = local.lambda_zip

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 const (
 	tableName                     string = "Memberships"
 	defaultMembershipDurationDays int    = 7 * 4
+)
+
+var (
+	ErrNotFound = errors.New("record not found")
 )
 
 type MembershipService struct {
@@ -66,6 +71,33 @@ func (svc *MembershipService) ListMembersForLevel(level string) ([]Membership, e
 	memberships := []Membership{}
 	err = dynamodbattribute.UnmarshalListOfMaps(res.Items, &memberships)
 	return memberships, err
+}
+
+func (svc *MembershipService) GetMembership(name, level string) (membership Membership, err error) {
+	res, err := svc.client.GetItem(&dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"Name": {
+				S: aws.String(name),
+			},
+			"Level": {
+				S: aws.String(level),
+			},
+		},
+		TableName: aws.String(tableName),
+	})
+
+	if err != nil {
+		return
+	}
+	err = dynamodbattribute.UnmarshalMap(res.Item, &membership)
+	if err != nil {
+		return
+	}
+	if res.Item == nil {
+		err = ErrNotFound
+		return
+	}
+	return
 }
 
 func NewMembershipService() (svc MembershipService) {
