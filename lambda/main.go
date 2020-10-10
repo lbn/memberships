@@ -15,12 +15,6 @@ type AddResponse struct {
 
 type GetResponse AddResponse
 
-type NoRecordError struct{}
-
-func (err NoRecordError) Error() string {
-	return "record not found"
-}
-
 type ListMembersForLevelRequest struct {
 	Level string `json:"level"`
 }
@@ -58,7 +52,6 @@ func HandleRequestGet(ctx context.Context, getRequest GetRequest) (res GetRespon
 
 	if err != nil {
 		if err == memberships.ErrNotFound {
-			err = NoRecordError{}
 			return
 		}
 		err = fmt.Errorf("Could get membership %v: %v", getRequest, err)

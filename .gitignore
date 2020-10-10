@@ -4,3 +4,4 @@ build
 *.backup
 terraform.tfvars
 infra/*.zip
+mocks

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
 const (
@@ -17,11 +18,12 @@ const (
 )
 
 var (
-	ErrNotFound = errors.New("record not found")
+	ErrNotFound  = errors.New("record not found")
+	ErrDuplicate = errors.New("duplicate record")
 )
 
 type MembershipService struct {
-	client *dynamodb.DynamoDB
+	client dynamodbiface.DynamoDBAPI
 }
 
 type Membership struct {
@@ -32,6 +34,10 @@ type Membership struct {
 }
 
 func (svc *MembershipService) AddMembership(membership Membership) (*Membership, error) {
+	res, _ := svc.getItemByNameAndLevel(membership.Name, membership.Level)
+	if res.Item != nil {
+		return nil, ErrDuplicate
+	}
 	if membership.StartDate == nil {
 		membership.StartDate = aws.Time(time.Now())
 	}
@@ -73,8 +79,8 @@ func (svc *MembershipService) ListMembersForLevel(level string) ([]Membership, e
 	return memberships, err
 }
 
-func (svc *MembershipService) GetMembership(name, level string) (membership Membership, err error) {
-	res, err := svc.client.GetItem(&dynamodb.GetItemInput{
+func (svc *MembershipService) getItemByNameAndLevel(name, level string) (*dynamodb.GetItemOutput, error) {
+	return svc.client.GetItem(&dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"Name": {
 				S: aws.String(name),
@@ -85,6 +91,10 @@ func (svc *MembershipService) GetMembership(name, level string) (membership Memb
 		},
 		TableName: aws.String(tableName),
 	})
+}
+
+func (svc *MembershipService) GetMembership(name, level string) (membership Membership, err error) {
+	res, err := svc.getItemByNameAndLevel(name, level)
 
 	if err != nil {
 		return
