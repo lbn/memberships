@@ -10,11 +10,11 @@ jobs:
       - uses: actions/setup-go@v1
         with:
           go-version: '1.15'
+      - run: make mockgen
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.29
-      - run: make mockgen
       - run: make test
       - run: make package
       - uses: actions/upload-artifact@v2
