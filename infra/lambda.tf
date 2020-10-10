@@ -111,3 +111,27 @@ resource "aws_lambda_function" "lambda_list_members_for_level" {
     }
   }
 }
+
+resource "aws_lambda_function" "authorizer" {
+  s3_bucket     = aws_s3_bucket.lambda_bucket.bucket
+  s3_key        = local.lambda_zip
+  function_name = "memberships_authorizer"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "memberships-lambda"
+
+  source_code_hash = filebase64sha256(local.lambda_zip)
+
+  runtime = "go1.x"
+
+  depends_on = [
+    aws_s3_bucket_object.lambda_zip
+  ]
+
+  environment {
+    variables = {
+      function      = "authorizer"
+      auth_audience = var.auth_audience
+      auth_issuer   = var.auth_issuer
+    }
+  }
+}

@@ -62,6 +62,7 @@ func HandleRequestGet(ctx context.Context, getRequest GetRequest) (res GetRespon
 
 func main() {
 	functions := map[string]interface{}{
+		"authorizer":             HandleRequestAuthorize,
 		"add":                    HandleRequestAdd,
 		"get":                    HandleRequestGet,
 		"list-members-for-level": HandleRequestListMembersForLevel,
